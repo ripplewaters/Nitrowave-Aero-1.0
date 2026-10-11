@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/ripplewaters/Nitrowave-Aero-1.0/security/advisories/new
+    about: Please report security issues privately, not as a public issue.

@@ -1,0 +1,47 @@
+name: macOS preview
+
+on:
+  push:
+    branches: ['macos/preview']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      APPLE_SIGNING_IDENTITY: '-'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - run: npm ci
+      - run: npm test
+      - run: npm run tauri:build -- --target universal-apple-darwin
+      - name: Check architecture and package integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='src-tauri/target/universal-apple-darwin/release/bundle/macos/Nitrowave Aero.app'
+          lipo "$app/Contents/MacOS/nitrowave" -verify_arch arm64 x86_64
+          codesign --verify --deep --strict --verbose=2 "$app"
+          ditto -c -k --sequesterRsrc --keepParent "$app" Nitrowave-Aero-macOS-preview.app.zip
+          mkdir -p macos-artifacts
+          cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg macos-artifacts/
+          mv Nitrowave-Aero-macOS-preview.app.zip macos-artifacts/
+          cd macos-artifacts
+          shasum -a 256 *.dmg *.zip > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nitrowave-macOS-universal-preview
+          path: macos-artifacts/
+          if-no-files-found: error
+          retention-days: 14

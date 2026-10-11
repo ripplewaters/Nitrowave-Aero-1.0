@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+site-dist/
+release/
+src-tauri/target/
+src-tauri/target-*/
+landing/public/downloads/
+
+# Local tooling and secrets
+.env
+.env.*
+!.env.example
+.playwright-mcp/
+*.local
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
