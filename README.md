@@ -14,22 +14,24 @@
 
 </div>
 
-Nitrowave Aero is a small Windows music player built with [Tauri 2](https://tauri.app), React and WebGL2. Ten audio-reactive shader worlds react to bass, mids, treble, loudness and detected kicks, and are rendered through a curved CRT-glass pass. Twelve sculpted skins change the shell.
+Nitrowave Aero is a compact desktop music player for Windows and a macOS local-file playback preview, built from one shared codebase with [Tauri 2](https://tauri.app), React and WebGL2. Ten audio-reactive shader worlds react to bass, mids, treble, loudness and detected kicks, and are rendered through a curved CRT-glass pass. Eight sculpted skins change the shell.
 
 ## Features
 
 - **Local music files.** Play audio files on your computer. Analysis runs in the browser with the Web Audio API.
 - **Follow other apps (Windows).** Visualize audio from Spotify, a browser or any other app through WASAPI loopback capture, and see its "now playing" metadata through the System Media Transport Controls. Play, pause and skip are sent as media-key commands. Nitrowave never touches another app's stream or account.
-- **YouTube links.** Paste a link and it opens in your browser. Nitrowave then follows along through system audio, so the visuals still dance. Nitrowave does not embed or hide YouTube playback, in line with YouTube's API terms.
+- **YouTube links.** Paste a link and it opens in your browser. On Windows, Nitrowave can follow the sound through system audio. On macOS, browser audio does not drive the visuals. Nitrowave does not embed or hide YouTube playback.
 - **Ten shader worlds**, stepped through with the ← → keys or on-screen buttons.
-- **Twelve skins**, and a glow colour that can follow the skin, the shader or a custom colour.
+- **Eight skins**, and a glow colour that can follow the skin, the shader or a custom colour.
 - **Compact and resizable window**, remembered between sessions.
 
 ## Install
 
 Pre-built Windows installers will be published on the [Releases](https://github.com/ripplewaters/Nitrowave-Aero-1.0/releases) page. The installer is per-user and does not need administrator rights.
 
-macOS builds are a preview with local-file playback only. See [MACOS.md](MACOS.md).
+macOS builds are a preview with local-file playback only. The preview is ad-hoc signed and not notarized; a downloaded copy may be blocked by Gatekeeper. See [MACOS.md](MACOS.md).
+
+The website serves ordinary users; GitHub holds the MIT-licensed source and release downloads. Windows and macOS share this repository. See [LAUNCH.md](LAUNCH.md) for preparing downloads and deploying the website on Vercel.
 
 ## Build from source
 
@@ -37,7 +39,7 @@ Requirements:
 
 - [Node.js](https://nodejs.org) 22 (see `.nvmrc`)
 - [Rust](https://rustup.rs) stable
-- Windows 10 or 11 with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (included in current Windows versions)
+- Windows 10 or 11 with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/), or macOS 14.2+ with Xcode Command Line Tools (see [MACOS.md](MACOS.md))
 
 ```powershell
 git clone https://github.com/ripplewaters/Nitrowave-Aero-1.0.git

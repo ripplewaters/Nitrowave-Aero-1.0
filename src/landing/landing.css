@@ -318,3 +318,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
   .site-footer { padding: 26px 16px 34px; flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.download-platforms { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px; }
+.file-window dd a { color: inherit; }
+.pixel-meta a { color: inherit; }
+.preview-world { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hero-device > .preview-device { width: 100%; }
+.footer-copy { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.site-footer nav { max-width: 100%; flex-wrap: wrap; }
+main > section[id] { scroll-margin-top: 110px; }

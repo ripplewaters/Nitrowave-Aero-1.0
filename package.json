@@ -22,7 +22,7 @@
     "desktop-app"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "private": false,
   "type": "module",
@@ -33,11 +33,12 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "node scripts/build-desktop.mjs",
-    "landing:dev": "vite --config vite.landing.config.ts",
-    "landing:build": "tsc -b && vite build --config vite.landing.config.ts",
+    "landing:dev": "node scripts/prepare-landing.mjs && vite --config vite.landing.config.ts",
+    "landing:build": "node scripts/prepare-landing.mjs && tsc -b && vite build --config vite.landing.config.ts && node scripts/verify-release.mjs",
+    "release:verify": "node scripts/verify-release.mjs",
     "release:stage": "node scripts/stage-release.mjs",
     "notices": "node scripts/third-party-notices.mjs",
-    "release:build": "node scripts/third-party-notices.mjs && tauri build && npm run release:stage && npm run landing:build"
+    "release:build": "npm run tauri:build && npm run release:stage && npm run landing:build"
   },
   "dependencies": {
     "@fontsource/audiowide": "^5.3.0",
@@ -56,6 +57,6 @@
     "jsdom": "^26.1.0",
     "typescript": "~5.9.2",
     "vite": "^7.1.3",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.3"
   }
 }

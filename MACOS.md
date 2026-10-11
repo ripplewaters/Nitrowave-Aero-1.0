@@ -9,9 +9,8 @@ automatically merged by Tauri on macOS and produces an app bundle and DMG. The s
 minimum is macOS 14.2, leaving room for a future Core Audio taps implementation.
 Both Apple Silicon and Intel are supported by the universal build target.
 
-Windows retains its NSIS installer, WASAPI capture, media session integration and desktop
-shortcut. The new build script only updates the Windows shortcut for a default release build.
-The existing Windows website and its release staging remain Windows-only.
+Windows retains its NSIS installer, WASAPI capture and media session integration.
+The landing page and release workflow include both platforms in this same repository.
 
 Mac system audio capture, other-app track metadata and other-app transport controls are
 **not implemented**. The UI disables Follow and explains that local files drive the visuals.
@@ -54,16 +53,21 @@ builds concurrently in the same checkout. Regenerate Windows notices before its 
 
 ## Build through GitHub Actions
 
-`.github/workflows/macos-preview.yml` runs when the `macos/preview` branch is pushed.
-Once the workflow exists on the default branch, it can also be started manually through
-**Actions → macOS preview → Run workflow** for the containing branch.
+`.github/workflows/macos-preview.yml` is manual. Once the workflow exists on the default
+branch, start **Actions → macOS preview → Run workflow** for the desired source branch.
 The workflow tests, builds both architectures, checks the executable and signature, and
 uploads DMG, a zipped app preserving bundle metadata, and SHA-256 checksums as an artifact.
 It does not publish a GitHub release or change the website.
 
 The preview uses an ad-hoc signature and is not notarized. It is intended for developer QA;
-it does not establish that Gatekeeper will accept a public download. This workflow has not
-been run as part of the Windows preparation.
+it does not establish that Gatekeeper will accept a public download. A successful run checks
+package integrity; the native QA below still requires physical Macs.
+
+For coordinated Windows/Mac packages, use **Prepare desktop release** instead. It produces
+`Nitrowave-Aero-1.0.0-macOS-universal-preview.dmg`, a metadata-preserving app ZIP and
+`macOS-SHA256SUMS.txt`, alongside the Windows installer. The version comes from the shared
+package/config/Cargo version. Optionally it creates a draft beta release, never a public one.
+See [LAUNCH.md](LAUNCH.md). No separate Mac repository or permanent platform branch is needed.
 
 ## Sign and notarize a public release
 
@@ -83,9 +87,11 @@ Connect API key. Keep credentials outside source control. Then run:
 npm run tauri:build -- --target universal-apple-darwin
 ```
 
-Tauri signs and notarizes when configured with those credentials. The preview workflow
-deliberately uses ad-hoc signing; public signing must happen through the configured Mac
-environment, not by distributing the preview artifact.
+Tauri signs and notarizes when configured with those credentials. The standalone preview
+workflow deliberately uses ad-hoc signing. The coordinated **Prepare desktop release**
+workflow supports Developer ID signing and notarization through the `notarize_macos` input
+and the repository secrets listed in [LAUNCH.md](LAUNCH.md). Public distribution still
+requires a successful signed build and clean-Mac native QA.
 
 Verify the final app and disk image, then test a browser-downloaded copy on another Mac:
 

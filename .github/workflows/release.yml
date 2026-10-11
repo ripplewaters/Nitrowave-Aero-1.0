@@ -1,0 +1,218 @@
+name: Prepare desktop release
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_draft:
+        description: 'Create a draft beta release after both packages pass (never publishes)'
+        type: boolean
+        default: false
+      notarize_macos:
+        description: 'Sign/notarize Mac preview using configured Apple repository secrets'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  packages:
+    name: Package (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Validate shared version
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const version = JSON.parse(readFileSync('package.json')).version;
+          const config = JSON.parse(readFileSync('src-tauri/tauri.conf.json'));
+          const cargo = readFileSync('src-tauri/Cargo.toml', 'utf8').match(/^version = "([^"]+)"/m)?.[1];
+          if (!/^\d+\.\d+\.\d+$/.test(version) || config.version !== version || cargo !== version) {
+            throw new Error('package.json, Cargo.toml and tauri.conf.json must share one release version.');
+          }
+          appendFileSync(process.env.GITHUB_ENV, `VERSION=${version}\n`);
+          JS
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run landing:build
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        run: npm run tauri:build -- -- --locked
+      - name: Stage Windows download and checksum
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path release-artifacts | Out-Null
+          $source = "src-tauri/target/release/bundle/nsis/Nitrowave Aero_${env:VERSION}_x64-setup.exe"
+          $name = "Nitrowave-Aero-${env:VERSION}-Windows-x64-setup.exe"
+          Copy-Item -LiteralPath $source -Destination "release-artifacts/$name"
+          $hash = (Get-FileHash -LiteralPath "release-artifacts/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $name" | Set-Content -Path release-artifacts/Windows-SHA256SUMS.txt -Encoding utf8NoBOM
+      - name: Install both Mac architecture targets
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Import Developer ID certificate
+        if: runner.os == 'macOS' && inputs.notarize_macos
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${APPLE_CERTIFICATE:?Missing APPLE_CERTIFICATE}"
+          : "${APPLE_CERTIFICATE_PASSWORD:?Missing APPLE_CERTIFICATE_PASSWORD}"
+          : "${APPLE_SIGNING_IDENTITY:?Missing APPLE_SIGNING_IDENTITY}"
+          : "${KEYCHAIN_PASSWORD:?Missing KEYCHAIN_PASSWORD}"
+          : "${APPLE_ID:?Missing APPLE_ID}"
+          : "${APPLE_PASSWORD:?Missing APPLE_PASSWORD}"
+          : "${APPLE_TEAM_ID:?Missing APPLE_TEAM_ID}"
+          if [ "$APPLE_SIGNING_IDENTITY" = '-' ]; then
+            echo 'Notarization requires a Developer ID Application identity.'
+            exit 1
+          fi
+          keychain="$RUNNER_TEMP/nitrowave-signing.keychain-db"
+          certificate="$RUNNER_TEMP/nitrowave-certificate.p12"
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
+          security import "$certificate" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$keychain"
+          security list-keychains -d user -s "$keychain" login.keychain-db
+      - name: Package ad-hoc Mac preview
+        if: runner.os == 'macOS' && !inputs.notarize_macos
+        env:
+          APPLE_SIGNING_IDENTITY: '-'
+        run: npm run tauri:build -- --target universal-apple-darwin -- --locked
+      - name: Package notarized Mac preview
+        if: runner.os == 'macOS' && inputs.notarize_macos
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run tauri:build -- --target universal-apple-darwin -- --locked
+      - name: Verify and stage Mac preview
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='src-tauri/target/universal-apple-darwin/release/bundle/macos/Nitrowave Aero.app'
+          lipo "$app/Contents/MacOS/nitrowave" -verify_arch arm64 x86_64
+          codesign --verify --deep --strict --verbose=2 "$app"
+          mkdir release-artifacts
+          dmgs=(src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg)
+          test "${#dmgs[@]}" -eq 1
+          cp "${dmgs[0]}" "release-artifacts/Nitrowave-Aero-${VERSION}-macOS-universal-preview.dmg"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "release-artifacts/Nitrowave-Aero-${VERSION}-macOS-universal-preview.app.zip"
+          cd release-artifacts
+          shasum -a 256 *.dmg *.zip > macOS-SHA256SUMS.txt
+      - name: Verify notarization and Gatekeeper
+        if: runner.os == 'macOS' && inputs.notarize_macos
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='src-tauri/target/universal-apple-darwin/release/bundle/macos/Nitrowave Aero.app'
+          spctl --assess --type execute --verbose=2 "$app"
+          xcrun stapler validate "$app"
+          # Tauri notarizes the app; separately notarize/staple the distributed disk image.
+          dmg="release-artifacts/Nitrowave-Aero-${VERSION}-macOS-universal-preview.dmg"
+          # Tauri also signs the DMG with the configured Developer ID identity.
+          codesign --verify --strict --verbose=2 "$dmg"
+          xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
+          cd release-artifacts
+          shasum -a 256 *.dmg *.zip > macOS-SHA256SUMS.txt
+      - name: Remove temporary signing material
+        if: always() && runner.os == 'macOS' && inputs.notarize_macos
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/nitrowave-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/nitrowave-certificate.p12"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ runner.os }}
+          path: release-artifacts/
+          if-no-files-found: error
+          retention-days: 30
+
+  draft:
+    name: Create draft beta release
+    needs: packages
+    if: inputs.create_draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          path: release-artifacts
+          merge-multiple: true
+      - name: Verify checksums and create draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAC_NOTARIZED: ${{ inputs.notarize_macos }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-artifacts
+          sha256sum --check Windows-SHA256SUMS.txt
+          sha256sum --check macOS-SHA256SUMS.txt
+          cd ..
+          version=$(node -p "require('./package.json').version")
+          tag="v${version}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag already exists. Review it manually; this workflow will not replace it."
+            exit 1
+          fi
+          cat > release-notes.md <<'NOTES'
+          Windows beta and macOS local-file playback preview from the same source revision.
+
+          Windows: per-user x64 NSIS installer; unsigned, so Windows may show a publisher warning.
+          macOS: universal Apple Silicon/Intel, macOS 14.2+, local-file playback preview.
+          Follow/system audio and other-app media controls are supported on Windows only.
+
+          Packaging and checksums do not establish native playback, installation or visual QA.
+          Complete LAUNCH.md and MACOS.md checks before publishing or enabling download buttons.
+          NOTES
+          if [ "$MAC_NOTARIZED" = 'true' ]; then
+            printf '\nMac package: Developer ID signed and notarization/Gatekeeper checks passed in CI. Native playback and installation QA remain separate.\n' >> release-notes.md
+          else
+            printf '\nMac package: ad-hoc signed and NOT notarized. Technical testing only; Gatekeeper may block a browser download.\n' >> release-notes.md
+          fi
+          gh release create "$tag" release-artifacts/* --draft --prerelease --target "$GITHUB_SHA" --title "Nitrowave Aero ${version} beta / Mac preview" --notes-file release-notes.md

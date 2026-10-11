@@ -1,6 +1,14 @@
 {
   "version": "1.0.0",
-  "file": "downloads/Nitrowave-Aero-1.0.0-Windows-x64-setup.exe",
-  "sizeMB": "3.3",
-  "sha256": "808ec50410aba1edfe5462a2ed285a292435f8abe4fd546155b3d6e8639237a2"
+  "repository": "https://github.com/ripplewaters/Nitrowave-Aero-1.0",
+  "tag": "v1.0.0",
+  "windows": {
+    "file": "Nitrowave-Aero-1.0.0-Windows-x64-setup.exe",
+    "checksums": "Windows-SHA256SUMS.txt"
+  },
+  "macos": {
+    "file": "Nitrowave-Aero-1.0.0-macOS-universal-preview.dmg",
+    "checksums": "macOS-SHA256SUMS.txt",
+    "preview": true
+  }
 }

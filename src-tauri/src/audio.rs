@@ -62,7 +62,7 @@ fn capture_audio(state: &Arc<Mutex<AudioFrame>>) -> Result<(), Box<dyn std::erro
             let mut mid_power = 0.0_f32;
             let mut treble_power = 0.0_f32;
             let mut total_power = 0.0_f32;
-            for sample in bytes[..read as usize * 8].chunks_exact(8) {
+            for sample in bytes[..read as usize * 8].as_chunks::<8>().0 {
                 let left = f32::from_le_bytes(sample[0..4].try_into()?);
                 let right = f32::from_le_bytes(sample[4..8].try_into()?);
                 let mono = ((left + right) * 0.5).clamp(-1.0, 1.0);

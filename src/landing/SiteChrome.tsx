@@ -30,7 +30,7 @@ export function SiteFooter({ home = '' }: { home?: string }) {
       <span className="badge b-off">OFFLINE<b>READY</b></span>
       <span className="badge b-spk">SPEAKERS<b>ON ♪</b></span>
     </div>
-    <div className="footer-copy"><p><span className="chrome-text">NITROWAVE</span> aero · Free for Windows · © 2026 Nitrowave</p><p className="legal-note">Nitrowave is not affiliated with Spotify, YouTube, Google or Microsoft. Their names are trademarks of their respective owners and are used only to describe compatibility.</p></div>
-    <nav aria-label="Footer"><a href="./license.html">License</a><a href="./privacy.html">Privacy</a><a href="./notices.html">Notices</a><a href={`${home}#download`}>Download</a><a href="#">Back to top ▲</a></nav>
+    <div className="footer-copy"><p><span className="chrome-text">NITROWAVE</span> aero · Free for Windows · Mac preview · © 2026 Nitrowave</p><p className="legal-note">Nitrowave is not affiliated with Spotify, YouTube, Google, Apple or Microsoft. Their names are trademarks of their respective owners and are used only to describe compatibility.</p></div>
+    <nav aria-label="Footer"><a href="./license.html">License</a><a href="./privacy.html">Privacy</a><a href="./notices.html">Notices</a><a href="https://github.com/ripplewaters/Nitrowave-Aero-1.0">Source on GitHub</a><a href="https://github.com/ripplewaters/Nitrowave-Aero-1.0/issues">Contact / report a bug</a><a href={`${home}#download`}>Download</a><a href="#">Back to top ▲</a></nav>
   </footer>;
 }

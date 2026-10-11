@@ -9,7 +9,7 @@ import { SKINS, type Skin } from '../skins/skins';
 import { DevicePreview } from './DevicePreview';
 import { SiteFooter, SiteHeader, WindowBar } from './SiteChrome';
 import { SHADER_PRESETS, type ShaderPresetIndex } from '../components/shaderPresets';
-import release from '../../landing/release.json';
+import release, { downloadUrl, releasesUrl } from './releases';
 import './landing.css';
 
 const WORLDS = [
@@ -24,17 +24,17 @@ const WORLDS = [
   'Glowing rings racing towards you through a bending tube.',
   'Northern lights rippling over a still, dark sea.',
 ];
-const ticker = ['NITROWAVE AERO 1.0 IS OUT NOW', `${SKINS.length} SKINS`, `${SHADER_PRESETS.length} AUDIO-REACTIVE VISUAL WORLDS`, '100% FREE', 'MADE FOR WINDOWS 10 / 11', 'NO ACCOUNT NEEDED', 'TURN IT UP'];
+const ticker = ['NITROWAVE AERO 1.0', `${SKINS.length} SKINS`, `${SHADER_PRESETS.length} AUDIO-REACTIVE VISUAL WORLDS`, '100% FREE', 'WINDOWS + MAC PREVIEW', 'NO ACCOUNT NEEDED', 'TURN IT UP'];
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function Sparkle({ style, size = 'm' }: { style: CSSProperties; size?: 's' | 'm' | 'l' }) {
   return <svg className={`sparkle sparkle-${size}`} style={style} viewBox="-1 -1 2 2" aria-hidden="true"><path d="M0-1C.1-.1.1-.1 1 0C.1.1.1.1 0 1C-.1.1-.1.1-1 0C-.1-.1-.1-.1 0-1Z" /></svg>;
 }
 
-function Download({ big = false }: { big?: boolean }) {
-  return <a className={`gel-button${big ? ' big' : ''}`} href={`./${release.file}`} download>
+function Download({ big = false, platform = 'windows' }: { big?: boolean; platform?: 'windows' | 'macos' }) {
+  return <a className={`gel-button${big ? ' big' : ''}`} href={downloadUrl(release[platform].file)}>
     <span className="gel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4" /></svg></span>
-    <span className="gel-label"><span>Download for Windows</span><small>FREE · v{release.version} · {release.sizeMB} MB</small></span>
+    <span className="gel-label"><span>{platform === 'windows' ? 'Download for Windows' : 'Download Mac preview'}</span><small>FREE · v{release.version} · {platform === 'windows' ? '64-BIT' : 'INTEL + APPLE SILICON'}</small></span>
   </a>;
 }
 
@@ -43,8 +43,8 @@ const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Sev
 const inWords = (n: number) => NUMBER_WORDS[n] ?? String(n);
 const pad = (n: number) => String(n + 1).padStart(2, '0');
 
-// Each world is a still captured from the real shader (landing/public/worlds), so the page only
-// runs one live shader, in the hero. "Tune in" plays the world there.
+// Both the tiles and hero use captures of the real shader. The website keeps GPU-heavy
+// rendering in the desktop app; "Tune in" changes the scene shown in the hero.
 function WorldTile({ index, selected, onTune }: { index: ShaderPresetIndex; selected: boolean; onTune: () => void }) {
   const preset = SHADER_PRESETS[index];
   return <article className={`world-tile${selected ? ' is-tuned' : ''}`} style={{ '--world': preset.color } as CSSProperties}>
@@ -83,7 +83,7 @@ function Landing() {
           <h1 id="hero-title"><span className="chrome-text">Your music.</span><span className="chrome-text">A whole new</span><span className="holo-text">dimension.</span></h1>
           <p className="hero-description">A little music machine with a big personality. {SKINS.length} moulded skins, {SHADER_PRESETS.length} living visual worlds, and your music right in the middle of it all.</p>
           <div className="hero-actions"><Download /><a className="ghost-link" href="#worlds">See all worlds <span aria-hidden="true">↓</span></a></div>
-          <p className="pixel-meta">WINDOWS 10 / 11 · 64-BIT · v{release.version}</p>
+          <p className="pixel-meta">WINDOWS 10 / 11 · <a href="#download">MAC PREVIEW</a> · v{release.version}</p>
         </div>
 
         <div className="hero-art" id="hero-stage">
@@ -92,7 +92,7 @@ function Landing() {
           <Sparkle size="l" style={{ top: '9%', left: '14%' }} /><Sparkle style={{ top: '22%', right: '8%', animationDelay: '-1.2s' }} />
           <Sparkle size="s" style={{ bottom: '28%', left: '6%', animationDelay: '-.6s' }} /><Sparkle style={{ bottom: '18%', right: '14%', animationDelay: '-2s' }} />
           <div className="sticker" aria-hidden="true"><span>NEW!<br /><small>v{release.version}</small></span></div>
-          <div className="hero-device"><DevicePreview skin={skin} preset={world} live /></div>
+          <div className="hero-device"><DevicePreview skin={skin} preset={world} featured /></div>
           <div className="device-reflection" aria-hidden="true" />
           <div className="now-showing">
             <button type="button" onClick={() => tune(world - 1)} aria-label="Previous visual world">◂</button>
@@ -152,7 +152,7 @@ function Landing() {
         <div className="feature-tiles">
           {[
             ['orb-cyan', '∿', 'Sound into scenery', 'Ten visual worlds, from neon streets to northern lights. Whatever you play, the scene answers your bass, mids and treble.'],
-            ['orb-lime', '▶', 'Plays well with others', 'Play a file from your computer, or keep Spotify, your browser or any music app going. Nitrowave shows the song and its buttons control the app.'],
+            ['orb-lime', '▶', 'Plays well with others', 'Play a file from your computer on Windows or Mac. On Windows, follow Spotify, your browser or any music app, with song info and media controls.'],
             ['orb-pink', '◎', 'A desktop companion', 'A sculpted shell on a transparent background. Park it anywhere and flip between three sizes.'],
             ['orb-violet', '✦', 'Your own frequency', `Pick from ${SKINS.length} skins and match the glow to the shell, the visual world or a colour of your own. Nitrowave remembers.`],
           ].map(([orb, icon, title, text]) => <article className="feature-tile" key={title}>
@@ -168,17 +168,18 @@ function Landing() {
         <div className="download-inner">
           <p className="pixel-chip">04 ▸ TUNE IN</p>
           <h2 id="download-title"><span className="chrome-text">Give your desktop</span><span className="holo-text">a pulse of its own.</span></h2>
-          <Download big />
+          <div className="download-platforms"><Download big /><Download big platform="macos" /></div>
           <div className="file-window">
             <WindowBar title="SETUP.EXE — PROPERTIES" tone="chrome" />
             <dl>
               <div><dt>Version</dt><dd>{release.version}</dd></div>
-              <div><dt>Size</dt><dd>{release.sizeMB} MB</dd></div>
-              <div><dt>System</dt><dd>Windows 10 / 11 · x64</dd></div>
-              <div><dt>SHA-256</dt><dd className="hash" title={release.sha256}>{release.sha256.slice(0, 16)}…{release.sha256.slice(-8)}</dd></div>
+              <div><dt>Windows</dt><dd>Windows 10 / 11 · x64</dd></div>
+              <div><dt>Mac preview</dt><dd>macOS 14.2+ · Intel + Apple Silicon</dd></div>
+              <div><dt>Release</dt><dd><a href={releasesUrl}>Files, checksums &amp; release notes ↗</a></dd></div>
             </dl>
             <p>If WebView2 is missing, the installer sets it up for you (this may need an internet connection). The installer is not code-signed yet, so Windows SmartScreen may ask you to confirm.</p>
-            <div className="file-links"><a href="./downloads/SHA256SUMS.txt" download>SHA-256 checksum ↗</a><a href="./license.html">License terms ↗</a><a href="./privacy.html">Privacy ↗</a><a href="./notices.html">Open-source notices ↗</a></div>
+            <p>The Mac download is a developer preview with local-file playback. Follow, system audio and other-app controls are not available on Mac. It is not signed with an Apple Developer ID or notarized, so macOS may block it. A verified Mac release is still in preparation.</p>
+            <div className="file-links"><a href={downloadUrl(release.windows.checksums)}>Windows SHA-256 ↗</a><a href={downloadUrl(release.macos.checksums)}>Mac SHA-256 ↗</a><a href="./license.html">License terms ↗</a><a href="./privacy.html">Privacy ↗</a><a href="./notices.html">Open-source notices ↗</a></div>
           </div>
         </div>
       </section>
@@ -188,9 +189,9 @@ function Landing() {
           <WindowBar title="HELP.TXT" tone="blue" />
           <div className="help-body">
             <h2 id="faq-title">Before you press play.</h2>
-            <details><summary>Which computers does it work on?</summary><p>Windows 10 or 11 with a 64-bit Intel or AMD processor, WebView2 and WebGL 2 support. This download is the Windows version.</p></details>
-            <details><summary>Does it work with Spotify and YouTube?</summary><p>Yes. Play music in Spotify, YouTube in your browser or any other app, and Nitrowave follows along: the orb shows the song from Windows' media controls, the transport buttons control that app, and the visuals react to what your speakers play. Nitrowave never signs in to or streams from those services, and pasted YouTube links open in your browser.</p></details>
-            <details><summary>Why does the preview move without music?</summary><p>The website preview runs a gentle ambient animation. In the player, local audio files drive the visuals directly. Music from other apps is followed through Windows system audio, which can include other sounds too.</p></details>
+            <details><summary>Which computers does it work on?</summary><p>The Windows version needs Windows 10 or 11, a 64-bit Intel or AMD processor, WebView2 and WebGL 2 support. The Mac preview needs macOS 14.2 or later on Intel or Apple Silicon and supports local-file playback. Mac installation and playback still need native verification.</p></details>
+            <details><summary>Does it work with Spotify and YouTube?</summary><p>On Windows, play music in Spotify, YouTube in your browser or any other app, and Nitrowave follows along: the orb shows the song from Windows' media controls, the transport buttons control that app, and the visuals react to what your speakers play. Nitrowave never signs in to or streams from those services, and pasted YouTube links open in your browser. The Mac preview opens links but cannot follow other apps' audio or controls.</p></details>
+            <details><summary>How does the website preview work?</summary><p>Choose a skin or visual world to see it on the player. The website uses images captured from the real visualizer. In the desktop app, local audio files drive the moving visuals directly. Music from other apps is followed through Windows system audio, which can include other sounds too.</p></details>
             <details><summary>How do I change skins and visuals?</summary><p>Use the arrows beside the player title to change skins and the arrows by the controls to change visual worlds. The FX button opens settings. The left and right arrow keys also switch visuals.</p></details>
             <details><summary>Do I need an internet connection?</summary><p>Local audio files and skins work offline once the player and WebView2 are installed. Music from other apps works however those apps work. Nitrowave itself does not need the internet.</p></details>
           </div>

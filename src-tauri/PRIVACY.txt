@@ -1,6 +1,6 @@
 NITROWAVE AERO — PRIVACY POLICY
 
-Last updated: 3 October 2026
+Last updated: 11 October 2026
 
 Short version: Nitrowave Aero collects nothing about you. Everything it does
 happens on your own computer.
@@ -11,16 +11,17 @@ THE APP
   Nitrowave sends no data about you or your listening to Nitrowave or anyone
   else.
 - Settings (skin, visual world, volume, window size and position, the last
-  YouTube link you typed) are stored locally in the app's WebView2 storage on
-  your computer. Uninstalling the app and deleting its data folder removes them.
+  YouTube link you typed) are stored locally in the app's webview storage on
+  your computer (WebView2 on Windows, WKWebView on macOS). Uninstalling the app
+  and deleting its data folder removes them.
 - Audio files you open are played directly from your disk. They are never
   uploaded or copied.
-- System audio: to make the visuals react to music from other apps, Nitrowave
+- Windows system audio: to make the visuals react to music from other apps, Nitrowave
   reads the sound your computer is playing through Windows' loopback capture.
   It only computes loudness levels (bass, mids, treble) in memory, many times a
   second. Audio is never recorded, stored or transmitted, and the microphone is
   never used.
-- Now playing: Nitrowave reads the title, artist, app name and playback
+- Windows now playing: Nitrowave reads the title, artist, app name and playback
   position that Windows' media controls already show for the app you are
   playing music in (for example Spotify or a browser tab), and sends that app
   play, pause and skip commands when you press Nitrowave's buttons. This
@@ -28,8 +29,11 @@ THE APP
 - YouTube links you paste open in your default web browser. From then on, your
   browser and YouTube handle playback under YouTube's and Google's privacy
   policies.
-- Microsoft Edge WebView2, which the app uses to draw its window, is a Windows
-  component maintained by Microsoft and governed by Microsoft's privacy terms.
+- The macOS preview plays local files. It does not capture audio, metadata or
+  playback controls from other apps.
+- The app draws its window with Microsoft Edge WebView2 on Windows and Apple's
+  WKWebView on macOS. These system components are maintained by their respective
+  platform providers and governed by their privacy terms.
 
 THE WEBSITE
 
