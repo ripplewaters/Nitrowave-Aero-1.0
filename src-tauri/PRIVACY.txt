@@ -1,0 +1,49 @@
+NITROWAVE AERO — PRIVACY POLICY
+
+Last updated: 3 October 2026
+
+Short version: Nitrowave Aero collects nothing about you. Everything it does
+happens on your own computer.
+
+THE APP
+
+- No accounts, no analytics, no tracking, no advertising and no telemetry.
+  Nitrowave sends no data about you or your listening to Nitrowave or anyone
+  else.
+- Settings (skin, visual world, volume, window size and position, the last
+  YouTube link you typed) are stored locally in the app's WebView2 storage on
+  your computer. Uninstalling the app and deleting its data folder removes them.
+- Audio files you open are played directly from your disk. They are never
+  uploaded or copied.
+- System audio: to make the visuals react to music from other apps, Nitrowave
+  reads the sound your computer is playing through Windows' loopback capture.
+  It only computes loudness levels (bass, mids, treble) in memory, many times a
+  second. Audio is never recorded, stored or transmitted, and the microphone is
+  never used.
+- Now playing: Nitrowave reads the title, artist, app name and playback
+  position that Windows' media controls already show for the app you are
+  playing music in (for example Spotify or a browser tab), and sends that app
+  play, pause and skip commands when you press Nitrowave's buttons. This
+  information is shown on screen only and is not stored or transmitted.
+- YouTube links you paste open in your default web browser. From then on, your
+  browser and YouTube handle playback under YouTube's and Google's privacy
+  policies.
+- Microsoft Edge WebView2, which the app uses to draw its window, is a Windows
+  component maintained by Microsoft and governed by Microsoft's privacy terms.
+
+THE WEBSITE
+
+- The download site uses no cookies, analytics, trackers, embedded videos or
+  third-party fonts or scripts.
+- Like any website, the hosting provider may keep standard server logs (such
+  as IP address, time and requested file) for security and operation, under the
+  hosting provider's own retention policy.
+
+YOUR RIGHTS
+
+Because Nitrowave does not collect or hold personal data about you, there is
+nothing for us to access, correct or delete. If you have questions, use the
+contact details on the official website.
+
+Changes to this policy will be published with new versions of the app and on
+the website.

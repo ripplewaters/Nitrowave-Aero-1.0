@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nitrowave Aero",
+  "version": "1.0.0",
+  "identifier": "com.nitrowave.aeroplayer",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "NITROWAVE AERO — DIGITAL PERSONAL MEDIA SYSTEM",
+        "width": 500,
+        "height": 560,
+        "minWidth": 210,
+        "minHeight": 235,
+        "maxWidth": 500,
+        "maxHeight": 560,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; frame-src 'none'; connect-src 'self' ipc: http://ipc.localhost; media-src 'self' blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "devCsp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "Nitrowave",
+    "copyright": "Copyright © 2026 Nitrowave. MIT License.",
+    "category": "Music",
+    "shortDescription": "Nitrowave Aero — audio-reactive desktop music player",
+    "longDescription": "A compact desktop music player with ten audio-reactive shader visuals and customizable skins. Plays local audio files and follows music from Spotify, your browser or any other app.",
+    "licenseFile": "LICENSE.txt",
+    "icon": [
+      "icons/icon.ico",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "displayLanguageSelector": false
+      },
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    },
+    "resources": {
+      "LICENSE.txt": "LICENSE.txt",
+      "PRIVACY.txt": "PRIVACY.txt",
+      "THIRD-PARTY-NOTICES.txt": "THIRD-PARTY-NOTICES.txt"
+    }
+  }
+}

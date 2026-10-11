@@ -1,0 +1,35 @@
+import { useId } from 'react';
+
+// The Nitrowave sphere: a glossy blue-violet orb crossed by one liquid sound wave.
+// Keep in sync with landing/public/favicon.svg.
+export function Logo({ className }: { className?: string }) {
+  const id = useId().replace(/:/g, '');
+  const ref = (name: string) => `url(#${id}-${name})`;
+  return <svg className={className} viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <radialGradient id={`${id}-sphere`} cx="36%" cy="30%" r="75%">
+        <stop offset="0" stopColor="#f2feff" /><stop offset=".22" stopColor="#6fe9ff" /><stop offset=".55" stopColor="#1f8bff" />
+        <stop offset=".85" stopColor="#3a2bc4" /><stop offset="1" stopColor="#1c0f6a" />
+      </radialGradient>
+      <linearGradient id={`${id}-wave`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#ffffff" /><stop offset=".6" stopColor="#e4f6ff" /><stop offset="1" stopColor="#a9d8ff" />
+      </linearGradient>
+      <linearGradient id={`${id}-tail`} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#c8ff3a" /><stop offset="1" stopColor="#7ad400" />
+      </linearGradient>
+      <linearGradient id={`${id}-gloss`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#fff" stopOpacity=".85" /><stop offset="1" stopColor="#fff" stopOpacity="0" />
+      </linearGradient>
+      <clipPath id={`${id}-clip`}><circle cx="32" cy="32" r="29" /></clipPath>
+    </defs>
+    <circle cx="32" cy="32" r="30" fill="#0b1250" />
+    <circle cx="32" cy="32" r="29" fill={ref('sphere')} />
+    <g clipPath={ref('clip')}>
+      <path d="M-1 41C7 31 15 28 22 33.5C29 39 34 41 40.5 32.5C46.5 24.5 53 16 65 13.5C57.5 19.5 51.5 29 45.5 38.5C38.5 49.5 30 50.5 22.5 44.5C15 38.5 7 41.5 -1 48Z" fill="#0b1a6a" opacity=".35" transform="translate(1.5 2.5)" />
+      <path d="M-1 41C7 31 15 28 22 33.5C29 39 34 41 40.5 32.5C46.5 24.5 53 16 65 13.5C57.5 19.5 51.5 29 45.5 38.5C38.5 49.5 30 50.5 22.5 44.5C15 38.5 7 41.5 -1 48Z" fill={ref('wave')} />
+      <path d="M44.5 27.8C50 20.5 55.5 15.5 65 13.5C59.5 18 55.5 23.5 52.3 28.8C50 27.3 47.2 27 44.5 27.8Z" fill={ref('tail')} />
+    </g>
+    <ellipse cx="29" cy="15" rx="17" ry="9.5" fill={ref('gloss')} />
+    <circle cx="32" cy="32" r="29" fill="none" stroke="#ffffff" strokeOpacity=".55" strokeWidth="1.2" />
+  </svg>;
+}
